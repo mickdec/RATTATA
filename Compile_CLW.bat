@@ -1,0 +1,1 @@
+gcc CL\Windows\client.c -lws2_32 -lpsapi -o CLW.exe
