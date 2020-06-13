@@ -1,1 +1,0 @@
-gcc SV\Windows\server.c -lws2_32 -o SVW.exe
