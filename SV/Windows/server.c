@@ -14,7 +14,8 @@
 
 #define DEFAULT_BUFLEN 4096
 
-typedef struct ClientData {
+typedef struct ClientData
+{
     SOCKET Listener;
 } CLIENTDATA, *PCLIENTDATA;
 
@@ -57,18 +58,11 @@ SOCKET init_listener()
     return ListenSocket;
 }
 
-DWORD WINAPI init_client(LPVOID lpParam){
-    PCLIENTDATA pDataArray;
-    pDataArray = (PCLIENTDATA)lpParam;
-
-    SOCKET ClientSocket = INVALID_SOCKET;
+int init_client_childprocess(SOCKET ClientSocket){
     int iResult;
     char recvbuf[DEFAULT_BUFLEN];
     int recvbuflen = DEFAULT_BUFLEN;
     int iSendResult;
-    ClientSocket = accept(pDataArray->Listener, NULL, NULL);
-    printf("New client\n");
-    closesocket(pDataArray->Listener);
     for (;;)
     {
         iResult = recv(ClientSocket, recvbuf, recvbuflen, 0);
@@ -92,13 +86,25 @@ DWORD WINAPI init_client(LPVOID lpParam){
     }
 }
 
-void start_client_thread(PCLIENTDATA pclientdata){
+DWORD WINAPI init_client(LPVOID lpParam)
+{
+    PCLIENTDATA pDataArray;
+    pDataArray = (PCLIENTDATA)lpParam;
+    SOCKET ClientSocket = INVALID_SOCKET;
+    ClientSocket = accept(pDataArray->Listener, NULL, NULL);
+    printf("New client\n");
+    closesocket(pDataArray->Listener);
+    init_client_childprocess(ClientSocket);
+}
+
+void init_client_thread(PCLIENTDATA pclientdata)
+{
     hThreadArray[threadNbr] = CreateThread(
-        NULL,                 // default security attributes
-        0,                    // use default stack size
-        init_client,   // thread function name
-        pclientdata,                 // argument to thread function
-        0,                    // use default creation flags
+        NULL,                         // default security attributes
+        0,                            // use default stack size
+        init_client,                  // thread function name
+        pclientdata,                  // argument to thread function
+        0,                            // use default creation flags
         &dwThreadIdArray[threadNbr]); // returns the thread identifier
 
     if (hThreadArray[threadNbr] == NULL)
@@ -109,51 +115,49 @@ void start_client_thread(PCLIENTDATA pclientdata){
     threadNbr++;
 }
 
-int __cdecl main(void)
+int menu()
 {
-    int dummy;
+    int choice, dummy;
     printf("RATTATA >>\n");
-    printf("Listening PORT : ");
-    scanf("%s", &PORT);
-    // printf("Press ENTER to start the listening server..\n");
-    // scanf("%d", &dummy);
-    // printf("Server started.\n");
-    // start_listening_thread();
-
-    // while(1){
-    //     printf("");
-    // }
-    
-    SOCKET listener = init_listener();
-
-    pDataArray[0] = (PCLIENTDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                                           sizeof(PCLIENTDATA));
-    if (pDataArray[0] == NULL)
+    printf("1 - Start a new server.\n2 - View clients\n3 - Exit\nEnter choice : ");
+    scanf("%d", &choice);
+    if (choice == 1)
     {
-        ExitProcess(2);
+        printf("Listening PORT : ");
+        scanf("%s", &PORT);
+        SOCKET listener = init_listener();
+        pDataArray[threadNbr] = (PCLIENTDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+                                               sizeof(PCLIENTDATA));
+        if (pDataArray[threadNbr] == NULL)
+        {
+            ExitProcess(2);
+        }
+        pDataArray[threadNbr]->Listener = listener;
+        init_client_thread(pDataArray[threadNbr]);
     }
-
-    pDataArray[0]->Listener = listener;
-
-    start_client_thread(pDataArray[0]);
-
-    printf("Press ENTER to start the listening server..\n");
-    scanf("%d", &dummy);
-
-    pDataArray[1] = (PCLIENTDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                                           sizeof(PCLIENTDATA));
-    if (pDataArray[1] == NULL)
+    else if (choice == 2)
     {
-        ExitProcess(2);
+        if(threadNbr > 0 ){
+        for (int i = 0; i < threadNbr; i++){
+            if(pDataArray[i] != NULL){
+                printf("Client %d", i);
+            }
+        }
+        }else{
+            printf("No client connected.");
+        }
     }
-
-    pDataArray[1]->Listener = listener;
-
-    start_client_thread(pDataArray[1]);
-
-    while(1){
-        printf("");
+    else if (choice == 3)
+    {
+        ExitProcess(1);
     }
+}
 
+int main(void)
+{
+    while (1)
+    {
+        menu();
+    }
     return 0;
 }
