@@ -85,6 +85,12 @@ int init_client_childprocess(CLIENTINFO *Client)
             memset(recvbuf, 0, 4096);
             recvbuf[0] = '\0';
             fgets(recvbuf, 4096, stdin);
+            if(strcmp(recvbuf, "background") == 10){
+                iSendResult = send(Client->Socket, "", 2, 0);
+                memset(recvbuf, 0, 4096);
+                recvbuf[0] = '\0';
+                break;
+            }
             iSendResult = send(Client->Socket, recvbuf, strlen(recvbuf), 0);
             memset(recvbuf, 0, 4096);
             recvbuf[0] = '\0';
@@ -121,14 +127,16 @@ DWORD WINAPI init_client(LPVOID lpParam)
     pDataArray[threadNbr]->Listener = listener;
     init_client_thread(pDataArray[threadNbr]);
 
-    for(int i = 0; i < MAX_CLIENTS; i++){
-        if(PClients[i] == NULL){
+    for (int i = 1; i < MAX_CLIENTS; i++)
+    {
+        if (PClients[i] == NULL)
+        {
             PClients[i] = malloc(sizeof(PCLIENTINFO));
-            PClients[i]->id = clientNbr;
+            PClients[i]->id = clientNbr+1;
             strcpy(PClients[i]->ip, "TEST");
             PClients[i]->Socket = ClientSocket;
+            break;
         }
-        break;
     }
     clientNbr++;
 }
@@ -167,18 +175,23 @@ int menu()
     }
     else if (choice == 2)
     {
-        if (PClients[0] != NULL)
+        int trigger = 0;
+        for (int i = 1; i < MAX_CLIENTS; i++)
         {
-            for (int i = 0; i < MAX_CLIENTS; i++)
+            if (PClients[i] != NULL)
             {
-                if (PClients[i] != NULL)
-                {
-                    printf("Client %d connected.\n", i);
-                }
+                trigger = 1;
+                printf("%d - %s.\n", PClients[i]->id, PClients[i]->ip);
             }
+        }
+        if (trigger)
+        {
+            printf("Enter 0 to exit.\n");
             printf("Choose a client : ");
             scanf("%d", &choice);
-            init_client_childprocess(PClients[choice]);
+            if(choice != 0){
+                init_client_childprocess(PClients[choice]);
+            }
         }
         else
         {
