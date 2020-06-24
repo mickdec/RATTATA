@@ -8,8 +8,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <process.h>
-
 #pragma comment(lib, "Ws2_32.lib")
 
 #define DEFAULT_BUFLEN 4096
@@ -102,6 +100,8 @@ int init_client_childprocess(CLIENTINFO *Client)
             WSACleanup();
 
             PClients[Client->id] = NULL;
+            clientNbr--;
+            printf("CLIENTNBR-- %d\n", clientNbr);
 
             return 0;
         }
@@ -118,8 +118,7 @@ DWORD WINAPI init_client(LPVOID lpParam)
     closesocket(pData->Listener);
 
     SOCKET listener = init_listener();
-    pDataArray[threadNbr] = (PTHREADDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                                                   sizeof(PTHREADDATA));
+    pDataArray[threadNbr] = (PTHREADDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PTHREADDATA));
     if (pDataArray[threadNbr] == NULL)
     {
         ExitProcess(2);
@@ -132,13 +131,14 @@ DWORD WINAPI init_client(LPVOID lpParam)
         if (PClients[i] == NULL)
         {
             PClients[i] = malloc(sizeof(PCLIENTINFO));
-            PClients[i]->id = clientNbr+1;
+            PClients[i]->id = i;
             strcpy(PClients[i]->ip, "TEST");
             PClients[i]->Socket = ClientSocket;
             break;
         }
     }
     clientNbr++;
+    printf("CLIENTNBR++ %d\n", clientNbr);
 }
 
 void init_client_thread(PTHREADDATA pclientdata)
