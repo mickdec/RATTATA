@@ -13,6 +13,7 @@
 #pragma comment(lib, "Ws2_32.lib")
 
 #define DEFAULT_BUFLEN 4096
+#define MAX_CLIENTS 20
 
 typedef struct ClientData
 {
@@ -24,6 +25,8 @@ PCLIENTDATA pDataArray[10];
 DWORD dwThreadIdArray[10];
 HANDLE hThreadArray[10];
 int threadNbr = 0;
+int clientNbr = 0;
+SOCKET Clients[MAX_CLIENTS];
 
 void logprint(char *type, char *message)
 {
@@ -82,19 +85,36 @@ int init_client_childprocess(SOCKET ClientSocket){
                 WSACleanup();
                 return 0;
             }
+        }else{
+            printf("Client unreachable : %d\n", WSAGetLastError());
+            closesocket(ClientSocket);
+            WSACleanup();
+            return 0;
         }
     }
 }
 
 DWORD WINAPI init_client(LPVOID lpParam)
 {
-    PCLIENTDATA pDataArray;
-    pDataArray = (PCLIENTDATA)lpParam;
     SOCKET ClientSocket = INVALID_SOCKET;
-    ClientSocket = accept(pDataArray->Listener, NULL, NULL);
-    printf("New client\n");
-    closesocket(pDataArray->Listener);
-    init_client_childprocess(ClientSocket);
+    PCLIENTDATA pData;
+    pData = (PCLIENTDATA)lpParam;
+    ClientSocket = accept(pData->Listener, NULL, NULL);
+    printf("\n>>New client\n");
+    closesocket(pData->Listener);
+    
+    SOCKET listener = init_listener();
+    pDataArray[threadNbr] = (PCLIENTDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+                                           sizeof(PCLIENTDATA));
+    if (pDataArray[threadNbr] == NULL)
+    {
+        ExitProcess(2);
+    }
+    pDataArray[threadNbr]->Listener = listener;
+    init_client_thread(pDataArray[threadNbr]);
+    
+    Clients[clientNbr] = ClientSocket;
+    clientNbr++;
 }
 
 void init_client_thread(PCLIENTDATA pclientdata)
@@ -137,14 +157,17 @@ int menu()
     }
     else if (choice == 2)
     {
-        if(threadNbr > 0 ){
-        for (int i = 0; i < threadNbr; i++){
-            if(pDataArray[i] != NULL){
-                printf("Client %d", i);
+        if(Clients[0] != NULL ){
+            for(int i = 0; i < MAX_CLIENTS; i++){
+                if(Clients[i] != NULL){
+                    printf("Client %d connected.\n", i);
+                }
             }
-        }
+            printf("Choose a client : ");
+            scanf("%d", &choice);
+            init_client_childprocess(Clients[choice]);
         }else{
-            printf("No client connected.");
+            printf("No client connected.\n");
         }
     }
     else if (choice == 3)
