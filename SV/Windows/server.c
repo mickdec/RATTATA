@@ -27,6 +27,8 @@ typedef struct ClientInfo
     SOCKET Socket;
 } CLIENTINFO, *PCLIENTINFO;
 
+void init_client_thread(PTHREADDATA pclientdata);
+
 char PORT[3];
 PTHREADDATA pDataArray[MAX_CLIENTS];
 DWORD dwThreadIdArray[MAX_CLIENTS];
@@ -110,24 +112,30 @@ DWORD WINAPI init_client(LPVOID lpParam)
     closesocket(pData->Listener);
 
     SOCKET listener = init_listener();
+    pDataArray[threadNbr] = (PTHREADDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+                                                   sizeof(PTHREADDATA));
+    if (pDataArray[threadNbr] == NULL)
+    {
+        ExitProcess(2);
+    }
+    pDataArray[threadNbr]->Listener = listener;
+    init_client_thread(pDataArray[threadNbr]);
 
-    PClients[clientNbr] = malloc(sizeof(PCLIENTINFO));
-    PClients[clientNbr]->id = clientNbr;
-    strcpy(PClients[clientNbr]->ip, "TEST");
-    PClients[clientNbr]->Socket = ClientSocket;
-
+    for(int i = 0; i < MAX_CLIENTS; i++){
+        if(PClients[i] == NULL){
+            PClients[i] = malloc(sizeof(PCLIENTINFO));
+            PClients[i]->id = clientNbr;
+            strcpy(PClients[i]->ip, "TEST");
+            PClients[i]->Socket = ClientSocket;
+        }
+        break;
+    }
     clientNbr++;
 }
 
 void init_client_thread(PTHREADDATA pclientdata)
 {
-    hThreadArray[threadNbr] = CreateThread(
-        NULL,                         // default security attributes
-        0,                            // use default stack size
-        init_client,                  // thread function name
-        pclientdata,                  // argument to thread function
-        0,                            // use default creation flags
-        &dwThreadIdArray[threadNbr]); // returns the thread identifier
+    hThreadArray[threadNbr] = CreateThread(NULL, 0, init_client, pclientdata, 0, &dwThreadIdArray[threadNbr]);
 
     if (hThreadArray[threadNbr] == NULL)
     {
