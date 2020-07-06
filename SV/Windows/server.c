@@ -133,7 +133,7 @@ DWORD WINAPI init_client(LPVOID lpParam)
             PClients[i]->id = i;
             strcpy(PClients[i]->ip, "oui");
             PClients[i]->Socket = ClientSocket;
-            printf("\n>>New client connected - %s\n", PClients[i]->ip);
+            printf("\n>>New client connected - %d\n", PClients[i]->id);
             break;
         }
     }
@@ -163,8 +163,7 @@ int menu()
         printf("Listening PORT : ");
         scanf("%s", &PORT);
         SOCKET listener = init_listener();
-        pDataArray[threadNbr] = (PTHREADDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                                                       sizeof(PTHREADDATA));
+        pDataArray[threadNbr] = (PTHREADDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PTHREADDATA));
         if (pDataArray[threadNbr] == NULL)
         {
             ExitProcess(2);
