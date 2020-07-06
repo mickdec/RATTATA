@@ -153,7 +153,8 @@ void init_client_thread(PTHREADDATA pclientdata)
 
 int menu()
 {
-    int choice, dummy;
+    int choice = 0;
+    int dummy = 0;
     printf("RATTATA >>\n");
     printf("1 - Start a new server.\n2 - View clients\n3 - Exit\nEnter choice : ");
     scanf("%d", &choice);
