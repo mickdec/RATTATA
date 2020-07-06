@@ -61,13 +61,15 @@ SOCKET init_listener()
     hints.ai_flags = AI_PASSIVE;
     iResult = getaddrinfo(NULL, PORT, &hints, &result);
     ListenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+
     iResult = bind(ListenSocket, result->ai_addr, (int)result->ai_addrlen);
     freeaddrinfo(result);
     iResult = listen(ListenSocket, SOMAXCONN);
+
     return ListenSocket;
 }
 
-int init_client_childprocess(CLIENTINFO *Client)
+int link_client(CLIENTINFO *Client)
 {
     int iResult;
     char recvbuf[DEFAULT_BUFLEN];
@@ -129,9 +131,7 @@ DWORD WINAPI init_client(LPVOID lpParam)
         {
             PClients[i] = malloc(sizeof(PCLIENTINFO));
             PClients[i]->id = i;
-            struct sockaddr_in *pV4Addr = (struct sockaddr_in *)&ClientSocket;
-            struct in_addr ipAddr = pV4Addr->sin_addr;
-            inet_ntop(AF_INET, &ipAddr, PClients[i]->ip, INET_ADDRSTRLEN);
+            strcpy(PClients[i]->ip, "oui");
             PClients[i]->Socket = ClientSocket;
             printf("\n>>New client connected - %s\n", PClients[i]->ip);
             break;
@@ -189,7 +189,7 @@ int menu()
             scanf("%d", &choice);
             if (choice != 0)
             {
-                init_client_childprocess(PClients[choice]);
+                link_client(PClients[choice]);
             }
         }
         else
