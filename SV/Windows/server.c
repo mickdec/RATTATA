@@ -178,7 +178,7 @@ int menu()
         int trigger = 0;
         for (int i = 1; i < MAX_CLIENTS; i++)
         {
-            if (PClients[i]->id != 0)
+            if (PClients[i]->id)
             {
                 trigger = 1;
                 printf("%d Client\n", PClients[i]->id);
