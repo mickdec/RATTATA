@@ -75,6 +75,7 @@ int link_client(CLIENTINFO *Client)
     char recvbuf[DEFAULT_BUFLEN];
     int recvbuflen = DEFAULT_BUFLEN;
     int iSendResult;
+    int id = Client->id;
     for (;;)
     {
         iResult = recv(Client->Socket, recvbuf, recvbuflen, 0);
@@ -101,7 +102,9 @@ int link_client(CLIENTINFO *Client)
             closesocket(Client->Socket);
             WSACleanup();
 
-            PClients[Client->id] = NULL;
+            free(PClients[id]);
+            PClients[id] = malloc(sizeof(PCLIENTINFO));
+            PClients[id]->id = 0;
 
             return 0;
         }
@@ -127,11 +130,10 @@ DWORD WINAPI init_client(LPVOID lpParam)
 
     for (int i = 1; i < MAX_CLIENTS; i++)
     {
-        if (PClients[i] == NULL)
+        if (PClients[i]->id == 0)
         {
-            PClients[i] = malloc(sizeof(PCLIENTINFO));
             PClients[i]->id = i;
-            strcpy(PClients[i]->ip, "oui");
+            // strcpy(PClients[i]->ip, "oui");
             PClients[i]->Socket = ClientSocket;
             printf("\n>>New client connected - %d\n", PClients[i]->id);
             break;
@@ -176,10 +178,10 @@ int menu()
         int trigger = 0;
         for (int i = 1; i < MAX_CLIENTS; i++)
         {
-            if (PClients[i] != NULL)
+            if (PClients[i]->id != 0)
             {
                 trigger = 1;
-                printf("%d - %s\n", PClients[i]->id, PClients[i]->ip);
+                printf("%d Client\n", PClients[i]->id);
             }
         }
         if (trigger)
@@ -205,6 +207,11 @@ int menu()
 
 int main(void)
 {
+    for (int i = 1; i < MAX_CLIENTS; i++)
+    {
+        PClients[i] = malloc(sizeof(PCLIENTINFO));
+        PClients[i]->id = 0;
+    }
     while (1)
     {
         menu();
