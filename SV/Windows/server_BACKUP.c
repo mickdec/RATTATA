@@ -1,15 +1,9 @@
-#undef UNICODE
-#define WIN32_LEAN_AND_MEAN
-#define _WIN32_WINNT 0x0501
 #define DEFAULT_PORT "8888"
 
 #include <windows.h>
-#include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-#pragma comment(lib, "Ws2_32.lib")
 
 #define DEFAULT_BUFLEN 4096
 #define MAX_CLIENTS 20
@@ -187,6 +181,8 @@ void init_client_thread(PTHREADDATA pclientdata)
         ExitProcess(3);
     }
     threadNbr++;
+    
+    printf("\n!!!!!!! %d !!!!!!!\n", threadNbr);
 }
 
 int menu()
@@ -243,15 +239,15 @@ int menu()
 
 int main(void)
 {
-    read_config();
-    // for (int i = 1; i < MAX_CLIENTS; i++)
-    // {
-    //     PClients[i] = malloc(sizeof(PCLIENTINFO));
-    //     PClients[i]->id = 0;
-    // }
-    // while (1)
-    // {
-    //     menu();
-    // }
+    //read_config();
+    for (int i = 1; i < MAX_CLIENTS; i++)
+    {
+        PClients[i] = malloc(sizeof(PCLIENTINFO));
+        PClients[i]->id = 0;
+    }
+    while (1)
+    {
+        menu();
+    }
     return 0;
 }
