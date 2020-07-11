@@ -14,8 +14,6 @@ void logprint(char *type, char *message)
 
 void menu()
 {
-    char port[5];
-    SOCKET listener;
     int choice = 0;
     
     printf("RATTATA >>\n");
@@ -24,9 +22,9 @@ void menu()
     if (choice == 1)
     {
         printf("Listening PORT : ");
-        scanf("%s", port);
+        scanf("%s", PORT);
 
-        listener = init_listener(port);
+        SOCKET listener = init_listener();
 
         pDataArray[THREADNBR] = (PTHREADDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PTHREADDATA));
         if (pDataArray[THREADNBR] == NULL)
@@ -34,8 +32,6 @@ void menu()
             ExitProcess(2);
         }
         pDataArray[THREADNBR]->Listener = listener;
-        pDataArray[THREADNBR]->iport = malloc(5*sizeof(char));
-        strcpy(pDataArray[THREADNBR]->iport, port);
 
         init_client_thread(pDataArray[THREADNBR]);
     }

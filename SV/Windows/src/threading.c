@@ -1,6 +1,6 @@
 #include "../headers/header.h"
 
-void link_client(CLIENTINFO *Client)
+int link_client(CLIENTINFO *Client)
 {
     int iResult;
     char recvbuf[DEFAULT_BUFLEN];
@@ -35,8 +35,11 @@ void link_client(CLIENTINFO *Client)
             free(PClients[id]);
             PClients[id] = malloc(sizeof(PCLIENTINFO));
             PClients[id]->id = 0;
+
+            return 0;
         }
     }
+    return 0;
 }
 
 void init_client_thread(PTHREADDATA pclientdata)

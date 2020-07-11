@@ -9,6 +9,11 @@
 #define DEFAULT_BUFLEN 4096
 #define MAX_CLIENTS 20
 
+typedef struct ThreadData
+{
+    SOCKET Listener;
+} THREADDATA, *PTHREADDATA;
+
 typedef struct ClientInfo
 {
     int id;
@@ -16,17 +21,12 @@ typedef struct ClientInfo
     SOCKET Socket;
 } CLIENTINFO, *PCLIENTINFO;
 
-typedef struct ThreadData
-{
-    SOCKET Listener;
-    char* iport;
-} THREADDATA, *PTHREADDATA;
-
 PCLIENTINFO PClients[MAX_CLIENTS];
 DWORD dwThreadIdArray[MAX_CLIENTS];
 HANDLE hThreadArray[MAX_CLIENTS];
 PTHREADDATA pDataArray[MAX_CLIENTS];
 int THREADNBR;
+char *PORT;
 
 #include "threading.h"
 #include "socket.h"

