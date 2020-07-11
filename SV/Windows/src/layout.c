@@ -52,12 +52,11 @@ void menu(int *server_initied)
 {
     int choice = 0;
 
-    printf("\r1 - Start a new server.\n2 - View clients\n3 - Exit\nEnter choice : ");
-    // if(*server_initied == 0){
-    //     printf("\r1 - Start a new server.\n2 - View clients\n3 - Exit\nEnter choice : ");
-    // }else{
-    //     printf("\r1 - Stop the server.\n2 - View clients\n3 - Exit\nEnter choice : ");
-    // }
+    if(*server_initied == 0){
+        printf("\r1 - Start a new server.\n2 - View clients\n3 - Exit\nEnter choice : ");
+    }else{
+        printf("\r1 - Stop the server.\n2 - View clients\n3 - Exit\nEnter choice : ");
+    }
 
     scanf("%d", &choice);
     if (choice == 1)
@@ -74,7 +73,7 @@ void menu(int *server_initied)
 
             init_client_thread(pDataArray[THREADNBR]);
             logprint("SUCCESS", "Successfuly started the server");
-            //*server_initied = 1;
+            *server_initied = 1;
         }else if(*server_initied == 1){
             // logprint("INFO", "This action will close all the clients, are you sure ? [1/0] : ");
             // scanf("%d", &choice);
