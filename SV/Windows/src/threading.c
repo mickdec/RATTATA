@@ -53,5 +53,4 @@ void init_client_thread(PTHREADDATA pclientdata)
     }
 
     THREADNBR++;
-    printf("\n!!!!!!! %d !!!!!!!\n", THREADNBR);
 }
