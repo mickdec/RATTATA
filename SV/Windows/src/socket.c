@@ -25,9 +25,10 @@ DWORD WINAPI init_client(LPVOID lpParam)
 {
     SOCKET ClientSocket = INVALID_SOCKET;
     PTHREADDATA pData;
+    struct sockaddr_in client;
     pData = (PTHREADDATA)lpParam;
     
-    ClientSocket = accept(pData->Listener, NULL, NULL);
+    ClientSocket = accept(pData->Listener, (struct sockaddr *)&client, NULL);
     closesocket(pData->Listener);
 
     SOCKET listener = init_listener();
@@ -45,7 +46,7 @@ DWORD WINAPI init_client(LPVOID lpParam)
         if (PClients[i]->id == 0)
         {
             PClients[i]->id = i;
-            strcpy(PClients[i]->ip, "0.0.0.0");
+            strcpy(PClients[i]->ip, inet_ntoa(client.sin_addr));
             PClients[i]->Socket = ClientSocket;
             printf("\nA wild rattata appeared - ID=%d IP=%s\n", PClients[i]->id, PClients[i]->ip);
             break;
