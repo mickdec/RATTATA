@@ -30,14 +30,14 @@ DWORD WINAPI init_client(LPVOID lpParam)
     ClientSocket = accept(pData->Listener, NULL, NULL);
     closesocket(pData->Listener);
 
-    pData->Listener = init_listener();
+    SOCKET listener = init_listener();
     
     pDataArray[THREADNBR] = (PTHREADDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PTHREADDATA));
     if (pDataArray[THREADNBR] == NULL)
     {
         ExitProcess(2);
     }
-    pDataArray[THREADNBR]->Listener = pData->Listener;
+    pDataArray[THREADNBR]->Listener = listener;
     init_client_thread(pDataArray[THREADNBR]);
 
     for (int i = 1; i < MAX_CLIENTS; i++)
@@ -45,9 +45,9 @@ DWORD WINAPI init_client(LPVOID lpParam)
         if (PClients[i]->id == 0)
         {
             PClients[i]->id = i;
-            // strcpy(PClients[i]->ip, "oui");
+            strcpy(PClients[i]->ip, "0.0.0.0");
             PClients[i]->Socket = ClientSocket;
-            printf("\n>>New client connected - %d\n", PClients[i]->id);
+            printf("\nA wild rattata appeared - ID=%d IP=%s\n", PClients[i]->id, PClients[i]->ip);
             break;
         }
     }

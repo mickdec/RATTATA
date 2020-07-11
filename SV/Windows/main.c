@@ -2,6 +2,7 @@
 
 int main(void)
 {
+    int server_initied = 0;
     THREADNBR = 0;
     PORT = malloc(5*sizeof(char));
     strcpy(PORT, DEFAULT_PORT);
@@ -9,11 +10,16 @@ int main(void)
     {
         PClients[i] = malloc(sizeof(PCLIENTINFO));
         PClients[i]->id = 0;
+        PClients[i]->ip = malloc(16*sizeof(char));
     }
-    // read_config();
+
+    read_config();
+
+    intro();
     while (1)
     {
-        menu();
+        menu(&server_initied);
     }
+
     return 0;
 }

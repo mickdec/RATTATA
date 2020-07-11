@@ -2,35 +2,42 @@
 
 int read_config()
 {
-    // char *content = "PORT=8888";
-    // char *file_name = "options.cfg";
-    // char *readed = malloc(sizeof(char*));
+    char *content = "PORT=8888";
+    char *file_name = "options.cfg";
 
-    // FILE *fp;
-    // fp = fopen(file_name, "r");
+    FILE *fp;
+    fp = fopen(file_name, "r");
 
-    // if (fp == NULL)
-    // {
-    //     fp = fopen(file_name, "w");
-    //     for (int i = 0; content[i] != '\0'; i++) {
-    //         fputc(content[i], fp);
-    //     }
-    //     fclose(fp);
-    //     return 0;
-    // }
+    if (fp == NULL)
+    {
+        fp = fopen(file_name, "w");
+        for (int i = 0; content[i] != '\0'; i++)
+        {
+            fputc(content[i], fp);
+        }
+        fclose(fp);
+        return 0;
+    }
 
-    // // while ((content = fgetc(fp)) != EOF){
-    // //     readed = realloc(readed, sizeof(char*));
-    // //     // strcat(readed, (char*)content);
-    // //     printf("%c", content);
-    // //     char a[100];
-    // //     strcat(a, content);
-    // //     printf("%s", a);
-    // // }
-    // // strcat(readed, "\0");
-    // // content[strlen(content)-1] = '\0';
-    // // printf("%d", strlen(content));
-    // //printf("%s", readed);
+    char buffer[11];
+    char port[5];
+    while(!feof(fp))
+    {
+        fread(buffer, 11, 1, fp);
+    }
+    fclose(fp);
 
+    buffer[11] = '\0';
+    
+    int i = 0;
+    while(isdigit((int)buffer[i+5])){
+        port[i] = buffer[i+5];
+        i++;
+        if(i == 5){
+            break;
+        }
+    }
+    port[i] = '\0';
+    strcpy(PORT, port);
     return 0;
 }

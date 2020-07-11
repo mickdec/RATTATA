@@ -45,12 +45,5 @@ int link_client(CLIENTINFO *Client)
 void init_client_thread(PTHREADDATA pclientdata)
 {
     hThreadArray[THREADNBR] = CreateThread(NULL, 0, init_client, pclientdata, 0, &dwThreadIdArray[THREADNBR]);
-
-    if (hThreadArray[THREADNBR] == NULL)
-    {
-        printf("Error");
-        ExitProcess(3);
-    }
-
     THREADNBR++;
 }
