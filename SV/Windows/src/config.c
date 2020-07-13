@@ -3,7 +3,7 @@
 int read_config()
 {
     char *content = "PORT=8888";
-    char *file_name = "options.cfg";
+    char *file_name = "SVW_options.cfg";
 
     FILE *fp;
     fp = fopen(file_name, "r");
