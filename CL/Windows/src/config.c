@@ -19,7 +19,7 @@ int read_config(){
             fputc(content[i], fp);
         }
         fclose(fp);
-        return 0;
+        return 1;
     }
 
     while(!feof(fp))
@@ -31,7 +31,6 @@ int read_config(){
     if(buffer[0] != 'I' || buffer[1] != 'P' || buffer[2] != '='){
         remove(file_name);
         read_config();
-        return 0;
     }
 
     for(int i = 0; i<20; i++){
@@ -61,7 +60,6 @@ int read_config(){
     if(buffer[bufferSize+1] != 'P' || buffer[bufferSize+2] != 'O' || buffer[bufferSize+3] != 'R' || buffer[bufferSize+4] != 'T' || buffer[bufferSize+5] != '='){
         remove(file_name);
         read_config();
-        return 0;
     }
 
     for(int i = bufferSize+1; i<bufferSize+13; i++){
@@ -72,16 +70,14 @@ int read_config(){
     }
 
     int c = 0;
-    for(int i = bufferSize+1; i<strlen(buffer); i++){
-        if(i > bufferSize+5){
-            TMPPORTbuffer[c] = buffer[i];
-            c++;
-            if(c == 5){
-                TMPPORTbuffer[c+1] = '\0';
-                break;
-            }
+    while(isdigit((int)buffer[bufferSize+6+c])){
+        TMPPORTbuffer[c] = buffer[bufferSize+6+c];
+        c++;
+        if(c == 5){
+            break;
         }
     }
+    TMPPORTbuffer[c] = '\0';
 
     PORT = malloc(strlen(buffer)*sizeof(char));
     strcpy(PORT, TMPPORTbuffer);

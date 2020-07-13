@@ -2,8 +2,6 @@
 #define _HEADER_H_
 
 #define DEFAULT_BUFLEN 512
-#define DEFAULT_PORT "8888"
-#define DEFAULT_IP "127.0.0.1"
 
 #include <windows.h>
 #include <ws2tcpip.h>
