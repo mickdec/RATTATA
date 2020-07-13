@@ -1,6 +1,6 @@
 #include "../headers/header.h"
 
-void init_socket(LPVOID lpParam)
+void init_socket()
 {
     WSADATA wsaData;
     SOCKET ConnectSocket = INVALID_SOCKET;
