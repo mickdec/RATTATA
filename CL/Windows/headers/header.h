@@ -19,6 +19,8 @@ Pipe pipe;
 
 char OUTPUT_text[4096];
 DWORD OUTPUT_size;
+char *IP;
+char *PORT;
 
 #include "multiprocess.h"
 #include "socket.h"
