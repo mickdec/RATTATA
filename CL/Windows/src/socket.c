@@ -18,6 +18,8 @@ void init_socket()
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
 
+    printf("%s\n", IP);
+    printf("%s\n", PORT);
     iResult = getaddrinfo(IP, PORT, &hints, &result);
 
     for (ptr = result; ptr != NULL; ptr = ptr->ai_next)

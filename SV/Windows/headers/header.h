@@ -1,9 +1,12 @@
 #ifndef _HEADER_H_
 #define _HEADER_H_
 
+#define _WIN32_WINNT 0x501
+
 #include <windows.h>
 #include <ws2tcpip.h>
 #include <stdio.h>
+#include <ctype.h>
 
 #define DEFAULT_PORT "8888"
 #define DEFAULT_BUFLEN 4096

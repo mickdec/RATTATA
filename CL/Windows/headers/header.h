@@ -1,12 +1,14 @@
 #ifndef _HEADER_H_
 #define _HEADER_H_
 
+#define _WIN32_WINNT 0x501
 #define DEFAULT_BUFLEN 512
 
 #include <windows.h>
 #include <ws2tcpip.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 
 typedef struct Pipe0
 {
