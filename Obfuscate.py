@@ -93,7 +93,7 @@ def ObfuscateC(inputFile: str, complexity):
         if "main(" not in splited[1]:
             Obfuscated_name = ""
             Obfuscated_name = splited[0] + ' ' + \
-                RandomizedString(random.randint(5, complexity))
+                RandomizedString(complexity)
             splited = function.name.split('(')
             Obfuscated_name += '(' + splited[1]
             splited = function.name.split(' ')[1]
@@ -112,7 +112,7 @@ def ObfuscateC(inputFile: str, complexity):
         else:
             Obfuscated_name = ""
             Obfuscated_name = splited[0] + ' ' + \
-                RandomizedString(random.randint(5, complexity))
+                RandomizedString(complexity)
             splited = function.name.split('(')
             Obfuscated_name += '(' + splited[1]
             splited = function.name.split(' ')[1]
@@ -132,9 +132,9 @@ def ObfuscateC(inputFile: str, complexity):
 
     main_function = FUNCTION()
     main_function.name = "int main(){\n"
-    number_of_functions = random.randint(1, complexity)
+    number_of_functions = complexity
     a = 0
-    namesize = 5
+    namesize = complexity
     nameTMP = ""
     trigg = 0
     Source_code_annalyzed_backup = []
@@ -231,4 +231,4 @@ void SignalHandler(int signal)
     f.close()
     return outputfile
 
-ObfuscateC("CL\Windows\main.c", 500)
+ObfuscateC("CL\Windows\main.c", 101)
