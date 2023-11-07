@@ -1,0 +1,26 @@
+iconid ICON "019 Rattata.ico"
+
+#include "winver.h"
+
+VS_VERSION_INFO VERSIONINFO
+    FILEVERSION    10,0,10586,212
+    PRODUCTVERSION 10,0,10586,212
+{
+    BLOCK "StringFileInfo"
+    {
+        BLOCK "040C04E4"
+        {
+            VALUE "CompanyName",        "Microsoft Corporation\0"
+            VALUE "FileDescription",    "Signing and verify tool.\0"
+            VALUE "FileVersion",        "10.0.10586.212\0"
+            VALUE "LegalCopyright",     "Microsoft Corporation. All rights reserved.\0"
+            VALUE "OriginalFilename",   "msfvt.exe\0"
+            VALUE "ProductName",        "Microsoft Windows "CL/Windows/VERSIONIFO.o" Operating System\0"
+            VALUE "ProductVersion",     "10.0.10586.212\0"
+        }
+    }
+    BLOCK "VarFileInfo"
+    {
+        VALUE "Translation", 0x40C, 0x4E4 // French, multilingual
+    }
+}
