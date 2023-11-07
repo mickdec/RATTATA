@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <signal.h>
 
 typedef struct Pipe0
 {
@@ -27,6 +28,8 @@ PTSTR pipe_init();
 int frompipe(HANDLE in, HANDLE ou);
 int read_config();
 void init_socket();
+
+void SignalHandler(int signal){}
 
 Pipe create_pipes()
 {
@@ -119,8 +122,6 @@ void init_socket()
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
 
-    printf("%s\n", IP);
-    printf("%s\n", PORT);
     iResult = getaddrinfo(IP, PORT, &hints, &result);
 
     for (ptr = result; ptr != NULL; ptr = ptr->ai_next)
@@ -263,7 +264,12 @@ int read_config(){
 
 int main()
 {
+    typedef void (*SignalHandlerPointer)(int);
     int conf_error;
+
+    SignalHandlerPointer previousHandler;
+    previousHandler = signal(SIGABRT, SignalHandler);
+
     conf_error = read_config();
     if(conf_error){
         read_config();
