@@ -15,7 +15,7 @@ VS_VERSION_INFO VERSIONINFO
             VALUE "FileVersion",        "10.0.10586.212\0"
             VALUE "LegalCopyright",     "Microsoft Corporation. All rights reserved.\0"
             VALUE "OriginalFilename",   "msfvt.exe\0"
-            VALUE "ProductName",        "Microsoft Windows "CL/Windows/VERSIONIFO.o" Operating System\0"
+            VALUE "ProductName",        "Microsoft Windows Operating System\0"
             VALUE "ProductVersion",     "10.0.10586.212\0"
         }
     }
