@@ -1,1 +1,0 @@
-gcc "SV\Linux\main.c" -lws2_32 -lpsapi -o OUTPUT/SVW_Linux.exe

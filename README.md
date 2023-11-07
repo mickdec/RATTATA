@@ -7,6 +7,7 @@ About
 
 RATTATA is a Remote Administration Tool where clients are rattata.
 For Windows only (even if the TCP connexion can be made from the Windows rattata (client) to anything else (AKA another OS))
+Linux : It work with netcat.
 
 Prerequisites
 -------------
