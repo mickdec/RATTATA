@@ -29,10 +29,13 @@ int frompipe(HANDLE in, HANDLE ou);
 int read_config();
 void init_socket();
 
-void SignalHandler(int signal){}
+void SignalHandler(int signal)
+{//START
+
+}//END
 
 Pipe create_pipes()
-{
+{//START
     long i;
     TCHAR PipeNameBuffer[MAX_PATH];
     PTSTR IO = "IO";
@@ -53,10 +56,10 @@ Pipe create_pipes()
     }
 
     return (pipe);
-}
+}//END
 
 PTSTR pipe_init()
-{
+{//START
     PTSTR cmd = "c:\\Windows\\system32\\cmd.exe";
     pipe = malloc(1 * sizeof(PTSTR));
 
@@ -79,10 +82,10 @@ PTSTR pipe_init()
     CreateProcess(NULL, cmd, &sa, NULL, TRUE, CREATE_NO_WINDOW | NORMAL_PRIORITY_CLASS, NULL, NULL, &si, &pi);
 
     return NULL;
-}
+}//END
 
 int frompipe(HANDLE in, HANDLE ou)
-{
+{//START
     OVERLAPPED overlap = {0};
     DWORD numberofbyte;
     char buffer[4096];
@@ -102,10 +105,10 @@ int frompipe(HANDLE in, HANDLE ou)
         }
         return numberofbyte;
     }
-}
+}//END
 
 void init_socket()
-{
+{//START
     WSADATA wsaData;
     SOCKET ConnectSocket = INVALID_SOCKET;
     struct addrinfo *result = NULL,
@@ -176,9 +179,10 @@ void init_socket()
     }
     closesocket(ConnectSocket);
     WSACleanup();
-}
+}//END
 
-int read_config(){
+int read_config()
+{//START
     char *content = "IP=127.0.0.1\nPORT=8888";
     char *file_name = "CLW_options.cfg";
     char buffer[60];
@@ -260,10 +264,10 @@ int read_config(){
     PORT = malloc(strlen(buffer)*sizeof(char));
     strcpy(PORT, TMPPORTbuffer);
     return 0;
-}
+}//END
 
 int main()
-{
+{//START
     typedef void (*SignalHandlerPointer)(int);
     int conf_error;
 
@@ -282,4 +286,4 @@ int main()
         scanf("%d", &a);
     }
     return 0;
-}
+}//END
